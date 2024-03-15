@@ -45,4 +45,6 @@ require("lazy").setup({
     { "numToStr/Comment.nvim",
         lazy = false, },
     { "gbprod/stay-in-place.nvim" },
+    { 'nvim-lualine/lualine.nvim',
+        dependencies = { 'nvim-tree/nvim-web-devicons' } },
 })
