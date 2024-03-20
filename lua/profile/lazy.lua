@@ -13,12 +13,11 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- It"s plugin time.
+-- It's plugin time.
 require("lazy").setup({
     { "folke/which-key.nvim" },
     { "folke/neoconf.nvim",
         cmd = "Neoconf" },
-    { "folke/neodev.nvim" },
     { "rebelot/kanagawa.nvim" },
     { "nvim-treesitter/nvim-treesitter",
         build = ":TSUpdate" },
@@ -38,13 +37,10 @@ require("lazy").setup({
         dependencies = { "nvim-tree/nvim-web-devicons" },
         config = function() require("fzf-lua").setup({}) end },
     { "petertriho/nvim-scrollbar" },
-    { "trimclain/builder.nvim",
-        cmd = "Build",
-        keys = { { "<C-b>",
-           function() require("builder").build() end, desc = "Build" } }, },
     { "numToStr/Comment.nvim",
         lazy = false, },
     { "gbprod/stay-in-place.nvim" },
-    { 'nvim-lualine/lualine.nvim',
-        dependencies = { 'nvim-tree/nvim-web-devicons' } },
+    { "nvim-lualine/lualine.nvim",
+        dependencies = { "nvim-tree/nvim-web-devicons" } },
+    { "nvim-treesitter/nvim-treesitter-context" },
 })

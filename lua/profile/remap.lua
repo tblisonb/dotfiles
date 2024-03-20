@@ -6,9 +6,6 @@ vim.keymap.set("n", "<leader>v", vim.cmd.Ex)
 -- Toggle Undotree.
 vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
 
--- Opens a floating search-able file history.
-vim.keymap.set("n", "<leader>h", vim.cmd.History)
-
 -- Change the default behavior of pasting in visual mode; anything selected will
 -- be deleted, with the contents sent to the black hole register, then the
 -- unnamed register contents will be pasted. This preserves the contents of the
@@ -41,15 +38,3 @@ vim.keymap.set("n", "<leader>Y", "\"+Y")
 vim.keymap.set("i", "{<CR>", "{<CR>}<Esc>O")
 vim.keymap.set("i", "(<CR>", "(<CR>)<Esc>O")
 vim.keymap.set("i", "[<CR>", "[<CR>]<Esc>O")
-
--- Toggles the "Quickfix" window.
-vim.keymap.set('n', '<Leader>r', function()
-    local windows = vim.fn.getwininfo()
-    for _, win in pairs(windows) do
-        if win["quickfix"] == 1 then
-            vim.cmd.cclose()
-            return
-        end
-    end
-    vim.cmd.copen()
-end, { desc = "Toggle Quickfix Window" })
