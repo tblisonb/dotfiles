@@ -14,9 +14,11 @@ vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
 -- yank something in the same operation.
 vim.keymap.set("v", "p", "\"_dP")
 
--- Re-center cursor when jumping up/down a half page.
+-- Re-center cursor when jumping around text.
 vim.keymap.set("n", "<C-u>", "<C-u>zz")
 vim.keymap.set("n", "<C-d>", "<C-d>zz")
+vim.keymap.set("n", "<C-o>", "<C-o>zz")
+vim.keymap.set("n", "<C-i>", "<C-i>zz")
 
 -- Move selected lines up and down, inserting them as it goes.
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")

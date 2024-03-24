@@ -1,4 +1,8 @@
 require("lualine").setup({
+    extensions = { "fzf" },
+    options = {
+        globalstatus = true
+    },
     sections = {
         lualine_c = {
             {
@@ -10,5 +14,5 @@ require("lualine").setup({
                             -- 4: Filename and parent dir, with tilde as the home directory
             }
         }
-    }
+    },
 })
