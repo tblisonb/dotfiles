@@ -15,9 +15,6 @@ vim.opt.rtp:prepend(lazypath)
 
 -- It's plugin time.
 require("lazy").setup({
-    { "folke/which-key.nvim" },
-    { "folke/neoconf.nvim",
-        cmd = "Neoconf" },
     { "rebelot/kanagawa.nvim" },
     { "nvim-treesitter/nvim-treesitter",
         build = ":TSUpdate" },
@@ -25,7 +22,7 @@ require("lazy").setup({
     { "williamboman/mason.nvim" },
     { "williamboman/mason-lspconfig.nvim" },
     { "VonHeikemen/lsp-zero.nvim",
-        branch = "v3.x" }, 
+        branch = "v3.x" },
     { "neovim/nvim-lspconfig" },
     { "hrsh7th/cmp-nvim-lsp" },
     { "hrsh7th/nvim-cmp" },
@@ -34,14 +31,14 @@ require("lazy").setup({
         build = "./install --bin" },
     { "junegunn/fzf.vim" },
     { "ibhagwan/fzf-lua",
-        dependencies = { "nvim-tree/nvim-web-devicons" },
-        config = function() require("fzf-lua").setup({}) end },
+        dependencies = { "nvim-tree/nvim-web-devicons" } },
     { "petertriho/nvim-scrollbar" },
     { "numToStr/Comment.nvim",
-        lazy = false, },
+        lazy = false },
     { "gbprod/stay-in-place.nvim" },
     { "nvim-lualine/lualine.nvim",
         dependencies = { "nvim-tree/nvim-web-devicons" } },
     { "nvim-treesitter/nvim-treesitter-context" },
     { "gpanders/vim-oldfiles" },
+    { 'rmagatti/auto-session' },
 })

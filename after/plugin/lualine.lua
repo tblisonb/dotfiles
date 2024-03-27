@@ -1,9 +1,12 @@
 require("lualine").setup({
-    extensions = { "fzf" },
+    extensions = { "fzf", "lazy", "mason" },
     options = {
         globalstatus = true
     },
     sections = {
+        lualine_b = {
+            require('auto-session.lib').current_session_name
+        },
         lualine_c = {
             {
                 'filename',
