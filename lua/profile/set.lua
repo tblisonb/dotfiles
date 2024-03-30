@@ -35,3 +35,7 @@ vim.opt.undodir = (os.getenv("HOME") or os.getenv("USERPROFILE"))
 vim.opt.undofile = true
 
 vim.opt.updatetime = 50
+
+-- This is redundant with the lualine plugin and obscures status info in some
+-- contexts.
+vim.opt.showmode = false
