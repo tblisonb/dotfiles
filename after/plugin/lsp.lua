@@ -56,17 +56,17 @@ vim.api.nvim_create_autocmd('LspAttach', {
         --  Symbols are things like variables, functions, types, etc.
         map('<leader>ds', fzf.lsp_document_symbols, '[D]ocument [S]ymbols')
 
-        -- Fuzzy find all the symbols in your current workspace
+        -- Fuzzy find all the symbols in your current workspace.
         --  Similar to document symbols, except searches over your whole project.
         map('<leader>ws', fzf.lsp_live_workspace_symbols, '[W]orkspace [S]ymbols')
+
+        -- Execute a code action, usually your cursor needs to be on top of an error
+        -- or a suggestion from your LSP for this to activate.
+        -- map('<leader>ca', fzf.lsp_code_actions, '[C]ode [A]ction')
 
         -- Rename the variable under your cursor
         --  Most Language Servers support renaming across files, etc.
         map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
-
-        -- Execute a code action, usually your cursor needs to be on top of an error
-        -- or a suggestion from your LSP for this to activate.
-        map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
 
         -- Opens a popup that displays documentation about the word under your cursor
         --  See `:help K` for why this keymap
@@ -87,11 +87,20 @@ vim.api.nvim_create_autocmd('LspAttach', {
                 buffer = event.buf,
                 callback = vim.lsp.buf.document_highlight,
             })
-
             vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
                 buffer = event.buf,
                 callback = vim.lsp.buf.clear_references,
             })
+        end
+
+        if client.supports_method(lsp.textDocument_codeAction) then
+            map('<leader>ca', function()
+                require('fzf-lua').lsp_code_actions {
+                    winopts = {
+                        preview = { horizontal = 'up:80%' },
+                    },
+                }
+            end, 'Code actions')
         end
     end,
 })

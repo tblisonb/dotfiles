@@ -22,6 +22,9 @@ vim.keymap.set("n", "<C-i>", "<C-i>zz")
 vim.keymap.set("n", "gg", "ggzz")
 vim.keymap.set("n", "G", "Gzz")
 
+-- Move cursor to the end of the visual selection after yank.
+vim.keymap.set("v", "y", "y']")
+
 -- Move selected lines up and down, inserting them as it goes.
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
@@ -49,3 +52,4 @@ vim.keymap.set("n", "<leader>g", fzf.grep, {})
 vim.keymap.set("n", "<leader>G", fzf.grep_last, {})
 vim.keymap.set("n", "<leader>h", fzf.oldfiles, {})
 vim.keymap.set("n", "<leader>b", fzf.buffers, {})
+vim.keymap.set("n", "<leader>s", fzf.spell_suggest, {})

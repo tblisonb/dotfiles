@@ -17,4 +17,13 @@ require('nvim-treesitter.configs').setup({
 
     spell = true,
     syntax = 'On',
+
+    autotag = {
+        enable = true,
+    },
 })
+
+require('treesitter-context').setup({
+    max_lines = 10,
+})
+

@@ -41,4 +41,5 @@ require("lazy").setup({
     { "nvim-treesitter/nvim-treesitter-context" },
     { "gpanders/vim-oldfiles" },
     { 'rmagatti/auto-session' },
+    { 'windwp/nvim-ts-autotag' },
 })
