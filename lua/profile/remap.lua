@@ -23,7 +23,7 @@ vim.keymap.set("n", "gg", "ggzz")
 vim.keymap.set("n", "G", "Gzz")
 
 -- Move cursor to the end of the visual selection after yank.
-vim.keymap.set("v", "y", "y']")
+-- vim.keymap.set("v", "y", "y']")
 
 -- Move selected lines up and down, inserting them as it goes.
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
@@ -41,15 +41,22 @@ vim.keymap.set("n", "<leader>y", "\"+y")
 vim.keymap.set("v", "<leader>y", "\"+y")
 vim.keymap.set("n", "<leader>Y", "\"+Y")
 
+-- Need a way to get back indentation on a line with whitespace cleared.
+vim.keymap.set("n", "<leader>i", "ddO")
+
 -- Insert matching braces.
 vim.keymap.set("i", "{<CR>", "{<CR>}<Esc>O")
 vim.keymap.set("i", "(<CR>", "(<CR>)<Esc>O")
 vim.keymap.set("i", "[<CR>", "[<CR>]<Esc>O")
 
 local fzf = require("fzf-lua")
-vim.keymap.set("n", "<leader>f", fzf.files, {})
-vim.keymap.set("n", "<leader>g", fzf.grep, {})
-vim.keymap.set("n", "<leader>G", fzf.grep_last, {})
-vim.keymap.set("n", "<leader>h", fzf.oldfiles, {})
-vim.keymap.set("n", "<leader>b", fzf.buffers, {})
-vim.keymap.set("n", "<leader>s", fzf.spell_suggest, {})
+vim.keymap.set("n", "<leader>ff", fzf.files, {})            -- "find files"
+vim.keymap.set("n", "<leader>gg", fzf.grep, {})             -- "grep global"
+vim.keymap.set("n", "<leader>gb", fzf.lgrep_curbuf, {})     -- "grep buffer"
+vim.keymap.set("n", "<leader>gl", fzf.grep_last, {})        -- "grep last"
+vim.keymap.set("n", "<leader>gw", fzf.grep_cword, {})       -- "grep word"
+vim.keymap.set("n", "<leader>gW", fzf.grep_cWORD, {})       -- "grep WORD"
+vim.keymap.set("v", "<leader>gv", fzf.grep_visual, {})      -- "grep visual"
+vim.keymap.set("n", "<leader>fh", fzf.oldfiles, {})         -- "file history"
+vim.keymap.set("n", "<leader>fb", fzf.buffers, {})          -- "file buffers"
+vim.keymap.set("n", "<leader>ss", fzf.spell_suggest, {})    -- "spell suggest"
