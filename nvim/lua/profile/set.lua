@@ -7,8 +7,7 @@ vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 
-vim.opt.smartindent = true
-vim.opt.autoindent = true
+vim.opt.cindent = true
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 
@@ -16,13 +15,12 @@ vim.opt.listchars= { eol = "↵" , tab = "→ " , nbsp = "␣", trail = "•",
                      extends = "⟩", precedes = "⟨"  }
 
 vim.opt.list = true
-vim.opt.textwidth = 0
+vim.opt.textwidth = 127
 vim.opt.wrap = false
 
 vim.opt.spelllang = 'en_us'
 vim.opt.spell = true
 
-vim.opt.hlsearch = false
 vim.opt.incsearch = true
 
 vim.wo.number = true
@@ -39,3 +37,6 @@ vim.opt.updatetime = 50
 -- This is redundant with the lualine plugin and obscures status info in some
 -- contexts.
 vim.opt.showmode = false
+
+-- lsp.log grows infinitely; at one point it was over a gig so just disable it.
+vim.lsp.set_log_level("off")

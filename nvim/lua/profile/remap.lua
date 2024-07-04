@@ -41,8 +41,9 @@ vim.keymap.set("n", "<leader>y", "\"+y")
 vim.keymap.set("v", "<leader>y", "\"+y")
 vim.keymap.set("n", "<leader>Y", "\"+Y")
 
--- Need a way to get back indentation on a line with whitespace cleared.
-vim.keymap.set("n", "<leader>i", "ddO")
+-- Need a way to get back indentation on a line with whitespace cleared; deleted
+-- contents should go to the black hole register as to not override anything.
+vim.keymap.set("n", "<leader>i", "\"_ddO")
 
 -- Insert matching braces.
 vim.keymap.set("i", "{<CR>", "{<CR>}<Esc>O")
@@ -60,3 +61,12 @@ vim.keymap.set("v", "<leader>gv", fzf.grep_visual, {})      -- "grep visual"
 vim.keymap.set("n", "<leader>fh", fzf.oldfiles, {})         -- "file history"
 vim.keymap.set("n", "<leader>fb", fzf.buffers, {})          -- "file buffers"
 vim.keymap.set("n", "<leader>ss", fzf.spell_suggest, {})    -- "spell suggest"
+
+-- This is because I'm lazy - it selects all lines in the current buffer.
+vim.keymap.set("n", "<C-a>", "ggVGzz")
+
+-- With search highlighting enabled (which it is by default) normally the terms
+-- will remain highlighted until the next search is done or by pressing Ctrl +
+-- l. This remap means anytime escape is hit it will clear the highlights, which
+-- feels more intuitive to me.
+vim.keymap.set("n", "<Esc>", function() vim.cmd("noh") end)
