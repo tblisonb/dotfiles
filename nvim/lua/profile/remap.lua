@@ -70,3 +70,9 @@ vim.keymap.set("n", "<C-a>", "ggVGzz")
 -- l. This remap means anytime escape is hit it will clear the highlights, which
 -- feels more intuitive to me.
 vim.keymap.set("n", "<Esc>", function() vim.cmd("noh") end)
+
+-- I find I accidentally hit F1 a lot when going to hit escape which brings up
+-- help info so disable it.
+vim.keymap.set("i", "<F1>", "<Esc>")
+vim.keymap.set("n", "<F1>", "<Esc>")
+vim.keymap.set("v", "<F1>", "<Esc>")

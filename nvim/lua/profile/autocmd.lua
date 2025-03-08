@@ -6,7 +6,7 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
         -- Remove trailing whitespace.
         pcall(function() vim.cmd [[%s/\s\+$//e]] end)
         -- Convert tabs to spaces (width of 4).
-        pcall(function() vim.cmd [[%s/\t/    /e]] end)
+        pcall(function() vim.cmd [[%s/\t/    /eg]] end)
         -- Restore the original cursor position; otherwise the cursor gets reset
         -- to the beginning of the current line.
         vim.fn.setpos(".", save_cursor)
