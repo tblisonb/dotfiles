@@ -42,9 +42,11 @@ vim.opt.showmode = false
 -- lsp.log grows infinitely; at one point it was over a gig so just disable it.
 vim.lsp.set_log_level("off")
 
--- Idk how this worked before nvim 0.10 but undotree can't find default 'diff'
--- command so we have to specify on Windows.
-vim.g.undotree_DiffCommand = "FC"
+if vim.loop.os_uname().sysname == "Windows_NT" then
+    -- Idk how this worked before nvim 0.10 but undotree can't find default 'diff'
+    -- command so we have to specify on Windows.
+    vim.g.undotree_DiffCommand = "FC"
 
-local user_profile = vim.fn.getenv 'USERPROFILE'
-vim.g.python3_host_prog = user_profile .. '/.pyenv/pyenv-win/versions/3.8.10/python.exe'
+    local user_profile = vim.fn.getenv 'USERPROFILE'
+    vim.g.python3_host_prog = user_profile .. '/.pyenv/pyenv-win/versions/3.8.10/python.exe'
+end
