@@ -21,7 +21,10 @@ vim.api.nvim_create_autocmd({ "BufWritePost" }, {
             if (string.find(vim.fn.getcwd(), "C:\\working\\systems\\cobra", 0)) then
                 local file = vim.api.nvim_buf_get_name(0)
                 local result = vim.fn.system(string.format([[check.py -q %s]], file))
-                print(result)
+                if (result ~= nil and result ~= '') then
+                    -- Print the result to the command line only if it is not empty.
+                    print(result)
+                end
             end
         end)
     end,
