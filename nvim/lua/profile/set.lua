@@ -3,6 +3,8 @@ vim.opt.colorcolumn = { '80', '127' }
 vim.o.termguicolors = true
 vim.o.sessionoptions="blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
+vim.diagnostic.config({ virtual_text = false, virtual_lines = { current_line = true },})
+
 vim.opt.scrolloff = 10
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
