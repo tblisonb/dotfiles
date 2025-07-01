@@ -76,3 +76,9 @@ vim.keymap.set("n", "<Esc>", function() vim.cmd("noh") end)
 vim.keymap.set("i", "<F1>", "<Esc>")
 vim.keymap.set("n", "<F1>", "<Esc>")
 vim.keymap.set("v", "<F1>", "<Esc>")
+
+-- These seem to jump up or down to the start or end of the scrolloff
+-- respectively. I don't ever use it and I find myself accidentally hitting
+-- shift pretty often and it screws me up so just remap these to 'h' and 'l'.
+vim.keymap.set("n", "H", "h")
+vim.keymap.set("n", "L", "l")

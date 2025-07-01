@@ -8,12 +8,14 @@ lsp.on_attach(function(client, bufnr)
 end)
 
 require('mason').setup({})
-require('mason-lspconfig').setup({
-    ensure_installed = {},
-    handlers = {
-        lsp.default_setup,
-    },
-})
+-- A change in Mason regarding attaching lsp-clients to buffers means that multiple instances of lsps can be started, causing
+-- duplicate diagnostics.
+-- require('mason-lspconfig').setup({
+--     ensure_installed = {},
+--     handlers = {
+--         lsp.default_setup,
+--     },
+-- })
 
 local cmp_nvim_lsp = require('cmp_nvim_lsp')
 lspconfig.clangd.setup({

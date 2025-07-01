@@ -42,5 +42,4 @@ require("lazy").setup({
     { "gpanders/vim-oldfiles" },
     { 'rmagatti/auto-session' },
     { 'windwp/nvim-ts-autotag' },
-    { 'github/copilot.vim' },
 })
