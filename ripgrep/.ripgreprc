@@ -1,0 +1,8 @@
+# Global ripgrep config - see `rg --help` for the RIPGREP_CONFIG_PATH
+# environment variable that points here.
+
+# Respect .gitignore files even in directories with no actual git repo
+# (parametric.devel/cobra.devel are SVN-tracked; the git repos in them exist
+# only so ripgrep/fzf-lua would honor .gitignore - this flag makes that
+# workaround unnecessary).
+--no-require-git
