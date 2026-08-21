@@ -39,9 +39,6 @@ require("lazy").setup({
     { "hrsh7th/cmp-nvim-lsp" },
     { "hrsh7th/nvim-cmp" },
     { "L3MON4D3/LuaSnip" },
-    { "junegunn/fzf",
-        build = "./install --bin" },
-    { "junegunn/fzf.vim" },
     { "ibhagwan/fzf-lua",
         dependencies = { "nvim-tree/nvim-web-devicons" } },
     { "petertriho/nvim-scrollbar" },
@@ -51,15 +48,39 @@ require("lazy").setup({
     { "nvim-lualine/lualine.nvim",
         dependencies = { "nvim-tree/nvim-web-devicons" } },
     { "nvim-treesitter/nvim-treesitter-context" },
-    { "gpanders/vim-oldfiles" },
     { "rmagatti/auto-session" },
     { "windwp/nvim-ts-autotag" },
+    { "stevearc/conform.nvim" },
+    { "mfussenegger/nvim-lint" },
+    { "folke/which-key.nvim" },
+    { "stevearc/oil.nvim",
+        dependencies = { "nvim-tree/nvim-web-devicons" } },
+    { "nvim-mini/mini.nvim" },
 })
 
 --------------------------------------------------------------------------------
 -- Options
 --------------------------------------------------------------------------------
 
+-- Must run before applying the colorscheme below; kanagawa defaults to
+-- italic comments (commentStyle = { italic = true }).
+require("kanagawa").setup({
+    commentStyle = { italic = false },
+    -- @keyword.conditional.ternary (the ?/: in a ternary) has no explicit
+    -- entry of its own in kanagawa's treesitter highlights, so it falls
+    -- back to the base @keyword group, which - like all @keyword* groups -
+    -- is italic via keywordStyle. Overriding it here (rather than setting
+    -- keywordStyle = { italic = false }) keeps other keywords (if/else/
+    -- return/etc.) italic as before and only changes the ternary operator.
+    overrides = function(colors)
+        return {
+            ["@keyword.conditional.ternary"] = {
+                fg = colors.theme.syn.keyword,
+                italic = false,
+            },
+        }
+    end,
+})
 vim.cmd.colorscheme("kanagawa")
 vim.opt.colorcolumn = { "80", "127" }
 vim.o.termguicolors = true
@@ -141,8 +162,11 @@ end
 
 vim.g.mapleader = " "
 
--- Jump to netrw in the directory associated with the current buffer.
-vim.keymap.set("n", "<leader>v", vim.cmd.Ex)
+-- Open oil.nvim in the directory associated with the current buffer. This
+-- used to open netrw via vim.cmd.Ex, but oil's default_file_explorer = true
+-- disables netrw entirely (rather than just intercepting it), so :Ex itself
+-- no longer works.
+vim.keymap.set("n", "<leader>v", function() require("oil").open() end)
 
 -- Toggle Undotree.
 vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
@@ -192,17 +216,19 @@ vim.keymap.set("i", "{<CR>", "{<CR>}<Esc>O")
 vim.keymap.set("i", "(<CR>", "(<CR>)<Esc>O")
 vim.keymap.set("i", "[<CR>", "[<CR>]<Esc>O")
 
+-- desc is set on all of these (rather than the plain trailing comments used
+-- elsewhere in this file) so which-key.nvim shows a useful label for them.
 local fzf = require("fzf-lua")
-vim.keymap.set("n", "<leader>ff", fzf.files, {})         -- "find files"
-vim.keymap.set("n", "<leader>gg", fzf.grep, {})          -- "grep global"
-vim.keymap.set("n", "<leader>gb", fzf.lgrep_curbuf, {})  -- "grep buffer"
-vim.keymap.set("n", "<leader>gl", fzf.grep_last, {})     -- "grep last"
-vim.keymap.set("n", "<leader>gw", fzf.grep_cword, {})    -- "grep word"
-vim.keymap.set("n", "<leader>gW", fzf.grep_cWORD, {})    -- "grep WORD"
-vim.keymap.set("v", "<leader>gv", fzf.grep_visual, {})   -- "grep visual"
-vim.keymap.set("n", "<leader>fh", fzf.oldfiles, {})      -- "file history"
-vim.keymap.set("n", "<leader>fb", fzf.buffers, {})       -- "file buffers"
-vim.keymap.set("n", "<leader>ss", fzf.spell_suggest, {}) -- "spell suggest"
+vim.keymap.set("n", "<leader>ff", fzf.files, { desc = "Find files" })
+vim.keymap.set("n", "<leader>gg", fzf.grep, { desc = "Grep global" })
+vim.keymap.set("n", "<leader>gb", fzf.lgrep_curbuf, { desc = "Grep buffer" })
+vim.keymap.set("n", "<leader>gl", fzf.grep_last, { desc = "Grep last" })
+vim.keymap.set("n", "<leader>gw", fzf.grep_cword, { desc = "Grep word" })
+vim.keymap.set("n", "<leader>gW", fzf.grep_cWORD, { desc = "Grep WORD" })
+vim.keymap.set("v", "<leader>gv", fzf.grep_visual, { desc = "Grep visual" })
+vim.keymap.set("n", "<leader>fh", fzf.oldfiles, { desc = "File history" })
+vim.keymap.set("n", "<leader>fb", fzf.buffers, { desc = "File buffers" })
+vim.keymap.set("n", "<leader>ss", fzf.spell_suggest, { desc = "Spell suggest" })
 
 -- This is because I'm lazy - it selects all lines in the current buffer.
 vim.keymap.set("n", "<C-a>", "ggVGzz")
@@ -264,6 +290,28 @@ vim.api.nvim_create_autocmd({ "BufWritePost" }, {
     end,
 })
 
+-- v:oldfiles is only loaded from shada at startup and otherwise doesn't
+-- update as files are visited within a session, so fzf-lua's oldfiles
+-- picker (<leader>fh) would keep showing a static, launch-time snapshot.
+-- This replicates the one thing gpanders/vim-oldfiles was doing for us:
+-- move the current file to the front of v:oldfiles every time it's
+-- displayed, same as its own oldfiles#add().
+vim.api.nvim_create_autocmd("BufWinEnter", {
+    pattern = "*",
+    callback = function(args)
+        local fname = vim.api.nvim_buf_get_name(args.buf)
+        if fname == "" or vim.fn.filereadable(fname) == 0
+            or not vim.bo[args.buf].buflisted then
+            return
+        end
+        fname = vim.fn.fnamemodify(fname, ":p")
+        local rest = vim.tbl_filter(
+            function(f) return f ~= fname end, vim.v.oldfiles)
+        table.insert(rest, 1, fname)
+        vim.v.oldfiles = rest
+    end,
+})
+
 --------------------------------------------------------------------------------
 -- Plugin setup
 --------------------------------------------------------------------------------
@@ -303,6 +351,13 @@ cmp.setup({
         ["<C-u>"] = cmp.mapping.scroll_docs(-4),
         ["<C-d>"] = cmp.mapping.scroll_docs(4),
     }),
+    -- Without this, cmp has nothing to pull completions from at all - LSP
+    -- diagnostics/hover/etc. still work fine, but no completion menu ever
+    -- appears regardless of what's attached.
+    sources = cmp.config.sources({
+        { name = "nvim_lsp" },
+        { name = "luasnip" },
+    }),
 })
 
 require("Comment").setup()
@@ -330,11 +385,13 @@ fzflua.setup({
 
 require("mason").setup({})
 
+-- Advertises richer completion capabilities (snippets, etc.) to each server
+-- so cmp's "nvim_lsp" source has more to work with.
 local cmp_nvim_lsp = require("cmp_nvim_lsp")
 vim.lsp.config("clangd", {
-    capabilities = {
-        offsetEncoding = { "utf-16" },
-    },
+    capabilities = vim.tbl_deep_extend("force",
+        cmp_nvim_lsp.default_capabilities(),
+        { offsetEncoding = { "utf-16" } }),
 })
 vim.lsp.enable({ "clangd" })
 
@@ -355,6 +412,7 @@ vim.lsp.config("omnisharp", {
         "--encoding", "utf-8",
         "--languageserver",
     },
+    capabilities = cmp_nvim_lsp.default_capabilities(),
     settings = {
         FormattingOptions = {
             -- Enables support for reading code style, naming convention and
@@ -397,10 +455,6 @@ vim.lsp.config("omnisharp", {
 })
 vim.lsp.enable({ "omnisharp" })
 
--- Was never actually enabled despite being Mason-installed, so no LSP client
--- ever attached to Python buffers - hover/diagnostics/rename silently did
--- nothing, and "gd" was just Vim's built-in pattern-matching goto-definition,
--- not real LSP navigation.
 vim.lsp.config("pyright", {
     -- The system PYTHONPATH is set to ".;..;..\..;..." (several levels of
     -- parent directories), which always reaches the drive root - and since
@@ -412,6 +466,7 @@ vim.lsp.config("pyright", {
     -- nothing. Clearing PYTHONPATH just for this process fixes resolution
     -- without touching the environment scripts actually run in.
     cmd_env = { PYTHONPATH = "" },
+    capabilities = cmp_nvim_lsp.default_capabilities(),
 })
 vim.lsp.enable({ "pyright" })
 
@@ -505,10 +560,15 @@ vim.api.nvim_create_autocmd("LspAttach", {
         end, "Next diagnostic")
 
         map("<F2>", vim.lsp.buf.rename, "Rename symbol")
-        map("<F3>", function() vim.lsp.buf.format({ async = true }) end,
-            "Format file")
-        vim.keymap.set("x", "<F3>",
-            function() vim.lsp.buf.format({ async = true }) end,
+        -- lsp_format = "fallback" uses conform's own formatters (stylua,
+        -- ruff_format, etc.) where configured, and otherwise falls back to
+        -- this client's own LSP formatting - same behavior as before conform
+        -- was added, for filetypes with no formatter configured.
+        local function formatBufferOrSelection()
+            require("conform").format({ async = true, lsp_format = "fallback" })
+        end
+        map("<F3>", formatBufferOrSelection, "Format file")
+        vim.keymap.set("x", "<F3>", formatBufferOrSelection,
             { buffer = event.buf, desc = "LSP: Format selection" })
 
         -- The following two autocommands are used to highlight references
@@ -576,6 +636,41 @@ require("lualine").setup({
 require("scrollbar").setup()
 
 require("stay-in-place").setup()
+
+require("oil").setup({
+    -- Makes oil the explorer for directory buffers (e.g. `:e some/dir`).
+    -- This disables netrw outright rather than just intercepting it, so
+    -- <leader>v below calls oil directly instead of vim.cmd.Ex.
+    default_file_explorer = true,
+})
+
+require("mini.pairs").setup()
+require("mini.surround").setup()
+
+-- ruff (Python) and stylua (Lua) are Mason-installed specifically for this;
+-- clangd/omnisharp already format C/C++/C# well enough via LSP fallback.
+require("conform").setup({
+    formatters_by_ft = {
+        lua = { "stylua" },
+        python = { "ruff_format" },
+    },
+})
+
+require("lint").linters_by_ft = {
+    python = { "ruff" },
+}
+vim.api.nvim_create_autocmd({ "BufWritePost", "InsertLeave" }, {
+    callback = function()
+        require("lint").try_lint()
+    end,
+})
+
+local wk = require("which-key")
+wk.setup({})
+wk.add({
+    { "<leader>f", group = "Find" },
+    { "<leader>g", group = "Grep" },
+})
 
 -- "vim"/"vimdoc" are included even though nothing edits vimscript directly:
 -- Neovim core bundles its own (older) parsers for them, but nvim-treesitter's
