@@ -42,7 +42,6 @@ require("lazy").setup({
     { "nvim-treesitter/nvim-treesitter-context" },
     { "rmagatti/auto-session" },
     { "windwp/nvim-ts-autotag" },
-    { "stevearc/conform.nvim" },
     { "stevearc/oil.nvim", dependencies = { "nvim-tree/nvim-web-devicons" } },
     { "nvim-mini/mini.nvim" },
 })
@@ -132,7 +131,7 @@ vim.g.mapleader = " "
 
 -- Open oil.nvim in the directory associated with the current buffer. This used to open netrw via vim.cmd.Ex, but oil's
 -- default_file_explorer = true disables netrw entirely (rather than just intercepting it), so :Ex itself no longer works.
-vim.keymap.set("n", "<leader>v", function() require("oil").open() end)
+vim.keymap.set("n", "-", function() require("oil").open() end)
 
 -- Toggle Undotree.
 vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
@@ -209,9 +208,6 @@ vim.keymap.set("n", "<leader>fh", projectOldfiles,   { desc = "File history (pro
 vim.keymap.set("n", "<leader>fH", fzf.oldfiles,      { desc = "File history (global)" })
 vim.keymap.set("n", "<leader>fb", fzf.buffers,       { desc = "File buffers" })
 vim.keymap.set("n", "<leader>ss", fzf.spell_suggest, { desc = "Spell suggest" })
-
--- Selects all lines in the current buffer.
-vim.keymap.set("n", "<C-a>", "ggVGzz")
 
 -- With search highlighting enabled (which it is by default) normally the terms will remain highlighted until the next search
 -- is done or by pressing Ctrl + l. This remap means anytime escape is hit it will clear the highlights, which feels more
@@ -358,13 +354,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
         map("[d", function() vim.diagnostic.jump({ count = -1, on_jump = openDiagnosticFloatOnJump }) end, "Prev diagnostic")
         map("]d", function() vim.diagnostic.jump({ count = 1, on_jump = openDiagnosticFloatOnJump }) end, "Next diagnostic")
 
-        -- lsp_format = "fallback" uses conform's own formatters (stylua, ruff_format, etc.) where configured, and otherwise
-        -- falls back to this client's own LSP formatting - same behavior as before conform was added, for filetypes with no
-        -- formatter configured.
-        local function formatBufferOrSelection()
-            require("conform").format({ async = true, lsp_format = "fallback" })
-        end
-
         -- The following two autocommands are used to highlight references of the word under your cursor when your cursor rests
         -- there for a little while. See `:help CursorHold` for information about when this is executed. When you move your
         -- cursor, the highlights will be cleared (the second autocommand).
@@ -469,18 +458,79 @@ require("scrollbar").setup()
 
 require("stay-in-place").setup()
 
-require("oil").setup({
-    -- Makes oil the explorer for directory buffers (e.g. `:e some/dir`). This disables netrw outright rather than just
-    -- intercepting it, so <leader>v below calls oil directly instead of vim.cmd.Ex.
-    default_file_explorer = true,
-})
+-- oil.nvim always joins columns with a single hardcoded space (oil/util.lua's render_table does
+-- table.concat(pieces, " ")) and has no per-column padding option. To get more breathing room and
+-- per-column colors, wrap each built-in column: delegate to its original render function, then pad the
+-- result with extra trailing spaces and tag it with its own highlight group. Registering under the same
+-- name overrides the built-in column (oil/columns.lua checks its own registry before falling back to the
+-- adapter's), so the "columns" list below doesn't need to change.
+-- Note: on Windows, oil never registers a "permissions" column at all (oil/adapters/files.lua guards it
+-- behind `if not fs.is_windows`), so it always renders as the empty "-" placeholder no matter what - that's
+-- not fixable from config, since there's no data to show.
+vim.api.nvim_set_hl(0, "OilColumnSize", { fg = "#7e9cd8", default = true })
+vim.api.nvim_set_hl(0, "OilColumnMtime", { fg = "#98bb6c", default = true })
+vim.api.nvim_set_hl(0, "OilColumnPermissions", { fg = "#957fb8", default = true })
 
-require("conform").setup({
-    formatters_by_ft = {
-        lua = { "stylua" },
-        python = { "ruff_format" },
+-- Single-key sort presets, layered on top of oil's default keymaps (use_default_keymaps stays true, so
+-- "gs" is still there for anything not covered here). Lowercase = descending, uppercase = ascending.
+local function oilSortKeymap(column, order)
+    return {
+        callback = function() require("oil").set_sort({ { column, order } }) end,
+        mode = "n",
+        desc = string.format("Sort by %s (%s)", column, order),
+    }
+end
+
+require("oil").setup({
+    default_file_explorer = true,
+    columns = { "icon", "permissions", "mtime", "size" },
+    constrain_cursor = "name",
+    watch_for_changes = true,
+    keymaps = {
+        ["n"] = oilSortKeymap("name", "desc"),
+        ["N"] = oilSortKeymap("name", "asc"),
+        ["m"] = oilSortKeymap("mtime", "desc"),
+        ["M"] = oilSortKeymap("mtime", "asc"),
+        ["s"] = oilSortKeymap("size", "desc"),
+        ["S"] = oilSortKeymap("size", "asc"),
+    },
+    view_options = {
+        show_hidden = true,
+        case_insensitive = true,
     },
 })
+
+-- Column definitions aren't resolved until a buffer is actually rendered, so overriding them here
+-- (after setup, which is when oil.config finishes initializing its internal adapter registry) still
+-- takes effect for every oil buffer.
+local function oilPadColumn(name, extraSpaces, hlGroup)
+    local oilColumns = require("oil.columns")
+    local adapter = require("oil.config").get_adapter_by_scheme("oil://")
+    local original = oilColumns.get_column(adapter, name)
+    if not original then
+        return
+    end
+    local padding = string.rep(" ", extraSpaces)
+    oilColumns.register(name, vim.tbl_extend("force", original, {
+        render = function(entry, conf, bufnr)
+            local chunk = original.render(entry, conf, bufnr)
+            -- oil.nvim reuses a single shared table (columns.EMPTY) for every "no data" cell across every
+            -- render, so mutating chunk[1] in place here would permanently grow that shared constant a
+            -- little more on every redraw instead of just padding this one cell.
+            if type(chunk) == "table" then
+                return { chunk[1] .. padding, chunk[2] }
+            elseif chunk and chunk ~= "" then
+                return { chunk .. padding, hlGroup }
+            end
+            return chunk
+        end,
+    }))
+end
+
+oilPadColumn("icon", 1, nil)
+oilPadColumn("permissions", 2, "OilColumnPermissions")
+oilPadColumn("size", 2, "OilColumnSize")
+oilPadColumn("mtime", 2, "OilColumnMtime")
 
 -- "vim"/"vimdoc" are included even though nothing edits vimscript directly: Neovim core bundles its own (older) parsers for
 -- them, but nvim-treesitter's query files target a newer grammar revision, causing "invalid node type" errors wherever lua's
