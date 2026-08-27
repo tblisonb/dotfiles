@@ -410,7 +410,7 @@ local mini_indentscope = require("mini.indentscope")
 mini_indentscope.setup({
     draw = {
         delay = 250,
-        animation = mini_indentscope.gen_animation.quadratic({ easing = "in", duration = 150, unit = "total" }),
+        animation = mini_indentscope.gen_animation.quadratic({ easing = "in", duration = 100, unit = "total" }),
     },
     symbol = "┃",
 })
@@ -418,8 +418,6 @@ mini_indentscope.setup({
 require("mini.cursorword").setup()
 
 require("mini.comment").setup()
-
-require("mini.diff").setup()
 
 local mini_keymap = require("mini.keymap")
 local mini_keymap_multistep = mini_keymap.map_multistep
@@ -458,21 +456,19 @@ require("scrollbar").setup()
 
 require("stay-in-place").setup()
 
--- oil.nvim always joins columns with a single hardcoded space (oil/util.lua's render_table does
--- table.concat(pieces, " ")) and has no per-column padding option. To get more breathing room and
--- per-column colors, wrap each built-in column: delegate to its original render function, then pad the
--- result with extra trailing spaces and tag it with its own highlight group. Registering under the same
--- name overrides the built-in column (oil/columns.lua checks its own registry before falling back to the
--- adapter's), so the "columns" list below doesn't need to change.
--- Note: on Windows, oil never registers a "permissions" column at all (oil/adapters/files.lua guards it
--- behind `if not fs.is_windows`), so it always renders as the empty "-" placeholder no matter what - that's
--- not fixable from config, since there's no data to show.
+-- oil.nvim always joins columns with a single hardcoded space (oil/util.lua's render_table does table.concat(pieces, " ")) and
+-- has no per-column padding option. To get more breathing room and per-column colors, wrap each built-in column: delegate to
+-- its original render function, then pad the result with extra trailing spaces and tag it with its own highlight group.
+-- Registering under the same name overrides the built-in column (oil/columns.lua checks its own registry before falling back
+-- to the adapter's), so the "columns" list below doesn't need to change. Note: on Windows, oil never registers a "permissions"
+-- column at all (oil/adapters/files.lua guards it behind `if not fs.is_windows`), so it always renders as the empty "-"
+-- placeholder no matter what - that's not fixable from config, since there's no data to show.
 vim.api.nvim_set_hl(0, "OilColumnSize", { fg = "#7e9cd8", default = true })
 vim.api.nvim_set_hl(0, "OilColumnMtime", { fg = "#98bb6c", default = true })
 vim.api.nvim_set_hl(0, "OilColumnPermissions", { fg = "#957fb8", default = true })
 
--- Single-key sort presets, layered on top of oil's default keymaps (use_default_keymaps stays true, so
--- "gs" is still there for anything not covered here). Lowercase = descending, uppercase = ascending.
+-- Single-key sort presets, layered on top of oil's default keymaps (use_default_keymaps stays true, so "gs" is still there for
+-- anything not covered here). Lowercase = descending, uppercase = ascending.
 local function oilSortKeymap(column, order)
     return {
         callback = function() require("oil").set_sort({ { column, order } }) end,
@@ -487,12 +483,12 @@ require("oil").setup({
     constrain_cursor = "name",
     watch_for_changes = true,
     keymaps = {
-        ["n"] = oilSortKeymap("name", "desc"),
-        ["N"] = oilSortKeymap("name", "asc"),
+        ["n"] = oilSortKeymap("name", "asc"),
+        ["N"] = oilSortKeymap("name", "desc"),
         ["m"] = oilSortKeymap("mtime", "desc"),
         ["M"] = oilSortKeymap("mtime", "asc"),
-        ["s"] = oilSortKeymap("size", "desc"),
-        ["S"] = oilSortKeymap("size", "asc"),
+        ["z"] = oilSortKeymap("size", "desc"),
+        ["Z"] = oilSortKeymap("size", "asc"),
     },
     view_options = {
         show_hidden = true,
@@ -500,9 +496,8 @@ require("oil").setup({
     },
 })
 
--- Column definitions aren't resolved until a buffer is actually rendered, so overriding them here
--- (after setup, which is when oil.config finishes initializing its internal adapter registry) still
--- takes effect for every oil buffer.
+-- Column definitions aren't resolved until a buffer is actually rendered, so overriding them here (after setup, which is when
+-- oil.config finishes initializing its internal adapter registry) still takes effect for every oil buffer.
 local function oilPadColumn(name, extraSpaces, hlGroup)
     local oilColumns = require("oil.columns")
     local adapter = require("oil.config").get_adapter_by_scheme("oil://")
@@ -514,9 +509,9 @@ local function oilPadColumn(name, extraSpaces, hlGroup)
     oilColumns.register(name, vim.tbl_extend("force", original, {
         render = function(entry, conf, bufnr)
             local chunk = original.render(entry, conf, bufnr)
-            -- oil.nvim reuses a single shared table (columns.EMPTY) for every "no data" cell across every
-            -- render, so mutating chunk[1] in place here would permanently grow that shared constant a
-            -- little more on every redraw instead of just padding this one cell.
+            -- oil.nvim reuses a single shared table (columns.EMPTY) for every "no data" cell across every render, so mutating
+            -- chunk[1] in place here would permanently grow that shared constant a little more on every redraw instead of just
+            -- padding this one cell.
             if type(chunk) == "table" then
                 return { chunk[1] .. padding, chunk[2] }
             elseif chunk and chunk ~= "" then
@@ -529,15 +524,14 @@ end
 
 oilPadColumn("icon", 1, nil)
 oilPadColumn("permissions", 2, "OilColumnPermissions")
-oilPadColumn("size", 2, "OilColumnSize")
 oilPadColumn("mtime", 2, "OilColumnMtime")
+oilPadColumn("size", 2, "OilColumnSize")
 
 -- "vim"/"vimdoc" are included even though nothing edits vimscript directly: Neovim core bundles its own (older) parsers for
 -- them, but nvim-treesitter's query files target a newer grammar revision, causing "invalid node type" errors wherever lua's
 -- injections.scm embeds vim syntax (e.g. vim.cmd([[...]]) blocks). Installing them here overrides core's bundled parser with
 -- one that actually matches the query.
-require("nvim-treesitter").install(
-    { "c", "cpp", "c_sharp", "java", "python", "lua", "vim", "vimdoc" })
+require("nvim-treesitter").install({ "c", "cpp", "c_sharp", "java", "python", "lua", "vim", "vimdoc" })
 
 require("nvim-ts-autotag").setup()
 
