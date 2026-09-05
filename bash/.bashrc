@@ -12,13 +12,15 @@ alias ll='ls -l'
 alias la='ls -la'
 alias sudo='sudo -v; sudo '
 alias up='sudo sh -c "pacman -Syu; flatpak upgrade -y"'
-alias hx='helix'
 
-# Modern CLI tool replacements (eza, bat, fd, ripgrep)
+# Modern tool replacements
+alias more='less'
 alias ls='eza --color=auto'
 alias grep='rg'
 alias cat='bat'
 alias find='fd'
+alias vi='nvim'
+alias vim='nvim'
 
 # Navigation
 alias ..='cd ..'
@@ -44,3 +46,4 @@ PROMPT_COMMAND="$PROMPT_COMMAND; history -a"
 
 neofetch
 . "$HOME/.cargo/env"
+export PATH="$HOME/.local/bin:$PATH"
