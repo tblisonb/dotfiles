@@ -27,6 +27,9 @@ PROMPT_COMMAND="$PROMPT_COMMAND; history -a"
 export EDITOR=nvim
 export LESS='-R'
 
+# ripgrep
+export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
+
 neofetch
 . "$HOME/.cargo/env"
 export PATH="$HOME/.local/bin:$PATH"
