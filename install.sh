@@ -2,12 +2,14 @@
 #
 # install.sh - bootstrap this dotfiles repo onto a machine.
 #
+# Run this from inside a clone of the repo (e.g. `./install.sh`, or by full
+# path); it operates on whatever directory it lives in, wherever that repo
+# was cloned to.
+#
 # What it does:
-#   1. Clones https://github.com/tblisonb/dotfiles to ~/Applications/dotfiles
-#      (if it isn't already there).
-#   2. Symlinks the tracked config files/dirs into their real locations,
+#   1. Symlinks the tracked config files/dirs into their real locations,
 #      backing up anything real that's already there.
-#   3. Best-effort installs the packages the bash config depends on
+#   2. Best-effort installs the packages the bash config depends on
 #      (eza, bat, fd, ripgrep, zoxide, neofetch, ...) using whatever package
 #      manager the current distro uses.
 #
@@ -15,32 +17,13 @@
 
 set -uo pipefail
 
-REPO_URL="https://github.com/tblisonb/dotfiles"
-REPO_DIR="$HOME/Applications/dotfiles"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_SUFFIX=".bak-$(date +%Y%m%d%H%M%S)"
 
 msg()  { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
 
-# --- 1. Clone the repo if it's not already present -------------------------
-
-clone_repo() {
-    if [ -d "$REPO_DIR/.git" ]; then
-        msg "dotfiles repo already present at $REPO_DIR, skipping clone"
-        return
-    fi
-
-    if [ -e "$REPO_DIR" ]; then
-        warn "$REPO_DIR exists but isn't a git repo; move it aside and re-run"
-        exit 1
-    fi
-
-    msg "cloning $REPO_URL to $REPO_DIR"
-    mkdir -p "$(dirname "$REPO_DIR")"
-    git clone "$REPO_URL" "$REPO_DIR"
-}
-
-# --- 2. Symlink config files/dirs into place --------------------------------
+# --- 1. Symlink config files/dirs into place --------------------------------
 
 link_path() {
     # link_path <source-in-repo> <target-in-home>
@@ -82,7 +65,7 @@ setup_symlinks() {
     link_path "$REPO_DIR/wezterm/.wezterm.lua" "$HOME/.wezterm.lua"
 }
 
-# --- 3. Install packages the bash config depends on -------------------------
+# --- 2. Install packages the bash config depends on -------------------------
 
 DISTRO_ID=""
 DISTRO_LIKE=""
@@ -151,7 +134,6 @@ fixup_renamed_binaries() {
 
 # --- main --------------------------------------------------------------
 
-clone_repo
 setup_symlinks
 install_packages
 fixup_renamed_binaries
