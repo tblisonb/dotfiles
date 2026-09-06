@@ -7,31 +7,10 @@
 
 source ~/.bash_git
 
-# Basic aliases
-alias ll='ls -l'
-alias la='ls -la'
-alias sudo='sudo -v; sudo '
-alias up='sudo sh -c "pacman -Syu; flatpak upgrade -y"'
-
-# Modern tool replacements
-alias more='less'
-alias ls='eza --color=auto'
-alias grep='rg'
-alias cat='bat'
-alias find='fd'
-alias vi='nvim'
-alias vim='nvim'
-
-# Navigation
-alias ..='cd ..'
-alias ...='cd ../..'
-alias ....='cd ../../..'
-alias -- -='cd -'
-
-# Safety nets
-alias cp='cp -i'
-alias mv='mv -i'
-alias rm='rm -i'
+# Aliases and functions live in ~/.bash_aliases so this file stays portable
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
 
 # zoxide: smarter cd that learns your frequent directories
 eval "$(zoxide init bash --cmd cd)"
@@ -44,6 +23,28 @@ export HISTFILESIZE=20000
 shopt -s histappend
 PROMPT_COMMAND="$PROMPT_COMMAND; history -a"
 
+# Editor / pager
+export EDITOR=nvim
+export LESS='-R'
+
 neofetch
 . "$HOME/.cargo/env"
 export PATH="$HOME/.local/bin:$PATH"
+
+# Deduplicate PATH (in case this file gets sourced more than once)
+dedup_path() {
+    if [ -n "$PATH" ]; then
+        old_PATH=$PATH:; PATH=
+        while [ -n "$old_PATH" ]; do
+            x=${old_PATH%%:*}
+            case $PATH: in
+                *:"$x":*) ;;
+                *) PATH=$PATH:$x ;;
+            esac
+            old_PATH=${old_PATH#*:}
+        done
+        PATH=${PATH#:}
+    fi
+    unset old_PATH x
+}
+dedup_path
