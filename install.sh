@@ -73,8 +73,8 @@ DISTRO_LIKE=""
 detect_distro() {
     if [ -f /etc/os-release ]; then
         . /etc/os-release
-        DISTRO_ID="$ID"
-        DISTRO_LIKE="$ID_LIKE"
+        DISTRO_ID="${ID:-}"
+        DISTRO_LIKE="${ID_LIKE:-}"
     fi
 }
 
