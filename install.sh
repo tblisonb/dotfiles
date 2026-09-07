@@ -56,6 +56,7 @@ setup_symlinks() {
     link_path "$REPO_DIR/bash/.bashrc"       "$HOME/.bashrc"
     link_path "$REPO_DIR/bash/.bash_aliases" "$HOME/.bash_aliases"
     link_path "$REPO_DIR/bash/.bash_git"     "$HOME/.bash_git"
+    link_path "$REPO_DIR/bash/.flyline.sh"   "$HOME/.flyline.sh"
 
     # nvim: whole config directory
     link_path "$REPO_DIR/nvim" "$HOME/.config/nvim"
@@ -86,26 +87,26 @@ install_packages() {
         *arch*)
             msg "installing packages via pacman"
             sudo pacman -Syu --needed --noconfirm \
-                eza bat fd ripgrep zoxide neofetch unzip p7zip \
+                eza bat fd ripgrep zoxide neofetch fzf unzip p7zip \
                 || warn "pacman install had failures, check output above"
             ;;
         *debian*|*ubuntu*)
             msg "installing packages via apt"
             sudo apt-get update
             sudo apt-get install -y \
-                eza bat fd-find ripgrep zoxide neofetch nala unzip p7zip-full \
+                eza bat fd-find ripgrep zoxide neofetch fzf nala unzip p7zip-full \
                 || warn "apt install had failures, check output above"
             ;;
         *suse*)
             msg "installing packages via zypper"
             sudo zypper --non-interactive install \
-                eza bat fd ripgrep zoxide neofetch unzip p7zip \
+                eza bat fd ripgrep zoxide neofetch fzf unzip p7zip \
                 || warn "zypper install had failures, check output above"
             ;;
         *fedora*|*rhel*)
             msg "installing packages via dnf"
             sudo dnf install -y \
-                eza bat fd-find ripgrep zoxide neofetch unzip p7zip \
+                eza bat fd-find ripgrep zoxide neofetch fzf unzip p7zip \
                 || warn "dnf install had failures, check output above"
             ;;
         *)
@@ -114,6 +115,12 @@ install_packages() {
             ;;
     esac
 }
+
+# flyline (https://github.com/HalFrgrd/flyline) isn't packaged by any distro
+# below, so it's not installed here - it downloads and runs a script, which
+# should be reviewed and run by hand once per machine:
+#   source <(curl -sSfL https://github.com/HalFrgrd/flyline/releases/latest/download/install.sh)
+# bash/.flyline.sh (symlinked above) picks it up automatically once enabled.
 
 # Some distros ship bat/fd under different binary names (batcat/fdfind) to
 # avoid clashing with unrelated packages. The bash config assumes `bat` and
