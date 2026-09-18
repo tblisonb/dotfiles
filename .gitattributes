@@ -1,13 +1,18 @@
 # This repo is checked out on both Windows (core.autocrlf=true) and accessed
 # from WSL/Linux (via the same checkout, over /mnt/c) as one shared working
-# copy. Without this file, Windows' autocrlf silently checks the bash/*
-# configs out with CRLF, which bash then fails to source at all (a stray \r
-# breaks `foo() {` one-liners and corrupts `source ~/.bash_git` into a path
-# that doesn't exist) - it looks like "nothing got set up" even though the
-# symlinks themselves are fine. Force LF on anything a POSIX shell reads,
-# regardless of platform; leave PowerShell/JSON/Lua alone since both line
-# endings work fine there.
-bash/**    text eol=lf
-install.sh text eol=lf
-*.sh       text eol=lf
-ripgrep/** text eol=lf
+# copy - not two separate clones, one working tree. Windows' git and WSL's
+# git each have their own core.autocrlf default (true vs unset), so without
+# this file the two disagree about what a "clean" checkout of the same file
+# looks like:
+#   - bash/* actually broke functionally: Windows checked them out with
+#     CRLF, and bash fails to source a script with \r in it at all (a stray
+#     \r breaks `foo() {` one-liners and corrupts `source ~/.bash_git` into
+#     a path that doesn't exist) - looked like "nothing got set up" even
+#     though the symlinks themselves were fine.
+#   - Everything else (*.ps1/*.json/*.lua) was only cosmetic - CRLF works
+#     fine there - but WSL's git, with no autocrlf conversion of its own,
+#     compared the CRLF working tree against the LF blob Windows' git
+#     stored and reported them as permanently "modified" with no real
+#     content change, purely from the two git installs disagreeing.
+# Force LF everywhere so both sides agree regardless of local autocrlf.
+* text=auto eol=lf
