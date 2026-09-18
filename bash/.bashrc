@@ -47,8 +47,7 @@ export LESS='-R'
 # ripgrep
 export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
 
-neofetch
-. "$HOME/.cargo/env"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 export PATH="$HOME/.local/bin:$PATH"
 
 # Deduplicate PATH (in case this file gets sourced more than once)

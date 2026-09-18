@@ -29,6 +29,12 @@ $env:EDITOR = "nvim"
 # the repo-tracked copy.
 $env:RIPGREP_CONFIG_PATH = Join-Path (Split-Path $PSScriptRoot -Parent) "ripgrep\.ripgreprc"
 
+# --- Aliases / functions ---------------------------------------------------
+# Kept in aliases.ps1 so this file stays focused on prompt/completion setup,
+# same split as bash/.bashrc sourcing bash/.bash_aliases.
+
+. "$PSScriptRoot\aliases.ps1"
+
 # --- Prompt (Oh My Posh) --------------------------------------------------
 # RPS1/PROMPT_RULER equivalent: theme file lives next to this profile.
 # See its header comment for the ruler-line caveat (the "filler" property
@@ -37,6 +43,19 @@ $env:RIPGREP_CONFIG_PATH = Join-Path (Split-Path $PSScriptRoot -Parent) "ripgrep
 
 if (Get-Command oh-my-posh -ErrorAction SilentlyContinue) {
     oh-my-posh init pwsh --config "$PSScriptRoot\oh-my-posh-theme.json" | Invoke-Expression
+
+    # oh-my-posh's init replaces `function prompt` wholesale, which drops the
+    # OSC 9;9 working-directory report that the machine's own (pre-dot-source)
+    # $PROFILE prompt function used for Windows Terminal's persistedWindowLayout
+    # tab-restore (see that function's own comment/link). Re-wrap so both survive.
+    $ohMyPoshPrompt = $function:prompt
+    function prompt {
+        $loc = $executionContext.SessionState.Path.CurrentLocation
+        if ($loc.Provider.Name -eq "FileSystem") {
+            Write-Host -NoNewline "$([char]27)]9;9;`"$($loc.ProviderPath)`"$([char]27)\"
+        }
+        & $ohMyPoshPrompt
+    }
 }
 
 # --- zoxide: smarter cd that learns your frequent directories ------------
@@ -47,7 +66,21 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 
 # --- PSReadLine: tab-completion / suggestions -----------------------------
 
-if (Get-Module -ListAvailable -Name PSReadLine) {
+# Windows PowerShell 5.1's console host auto-loads its own inbox PSReadLine
+# (2.0.0, from Program Files\WindowsPowerShell\Modules) to get command-line
+# editing working at all, before this profile ever runs - and once a module
+# is loaded, later cmdlet calls use that already-loaded copy rather than
+# re-resolving to the newer per-user one installed alongside it (2.4.5, from
+# Documents\WindowsPowerShell\Modules), the way plain module auto-loading
+# would. 2.0.0 predates the Prediction/Suggestion APIs the rest of this
+# section depends on entirely, so force-reload the newest installed version
+# before touching any of it.
+$newestPSReadLine = Get-Module -ListAvailable -Name PSReadLine | Sort-Object Version -Descending | Select-Object -First 1
+if ($newestPSReadLine) {
+    Import-Module PSReadLine -RequiredVersion $newestPSReadLine.Version -Force
+}
+
+if (Get-Module -Name PSReadLine) {
     # Inline history suggestion (flyline's inline suggestion), shown as
     # ghost text after the cursor. Accepted by RightArrow/End by default
     # (PSReadLine's ForwardChar already calls AcceptSuggestion at end of
@@ -66,7 +99,11 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
 
     # Tab: prefer accepting the inline history suggestion (same job as
     # flyline's "Tab autocompletes from history first"); otherwise fall
-    # through to PowerShell's native tab-completion cycling.
+    # through to a real completion menu - real commands/files/directories
+    # listed at once (flyline's tab-completion suggestion list), rather than
+    # PowerShell's default TabCompleteNext, which just cycles the current
+    # word through candidates one at a time with nothing shown on screen
+    # until you've pressed Tab enough times to land on the right one.
     Set-PSReadLineKeyHandler -Key Tab -ScriptBlock {
         param($key, $arg)
 
@@ -79,10 +116,14 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
         [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$lineAfter, [ref]$cursorAfter)
 
         if ($lineAfter -eq $lineBefore) {
-            # No inline suggestion was accepted - fall back to normal tab completion.
-            [Microsoft.PowerShell.PSConsoleReadLine]::TabCompleteNext($key, $arg)
+            # No inline suggestion was accepted - fall back to the completion menu.
+            [Microsoft.PowerShell.PSConsoleReadLine]::MenuComplete($key, $arg)
         }
     }
+
+    # Once the menu from the Tab handler above is open, plain Tab/Shift+Tab
+    # step through it (PSReadLine's own default MenuComplete bindings), and
+    # arrow keys/Escape close it - nothing further to bind.
 
     # Cycling forward/backward through tab-completion candidates (flyline's
     # tabCompletionNextSuggestion/tabCompletionPrevSuggestion) is NOT

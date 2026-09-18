@@ -1,0 +1,13 @@
+# This repo is checked out on both Windows (core.autocrlf=true) and accessed
+# from WSL/Linux (via the same checkout, over /mnt/c) as one shared working
+# copy. Without this file, Windows' autocrlf silently checks the bash/*
+# configs out with CRLF, which bash then fails to source at all (a stray \r
+# breaks `foo() {` one-liners and corrupts `source ~/.bash_git` into a path
+# that doesn't exist) - it looks like "nothing got set up" even though the
+# symlinks themselves are fine. Force LF on anything a POSIX shell reads,
+# regardless of platform; leave PowerShell/JSON/Lua alone since both line
+# endings work fine there.
+bash/**    text eol=lf
+install.sh text eol=lf
+*.sh       text eol=lf
+ripgrep/** text eol=lf
