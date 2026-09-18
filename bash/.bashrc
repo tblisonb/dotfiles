@@ -23,8 +23,19 @@ if [ -f ~/.flyline.sh ]; then
     . ~/.flyline.sh
 fi
 
-# zoxide: smarter cd that learns your frequent directories
-eval "$(zoxide init bash --cmd cd)"
+# zoxide: smarter cd that learns your frequent directories.
+#
+# Ubuntu 22.04's apt-packaged zoxide (0.4.3, ~2021) generates a `cd`
+# wrapper whose helper (`_z_cd`) calls a bare `cd` instead of `builtin cd`;
+# since `cd` is the name of the wrapper function itself, that recurses into
+# itself forever and crashes the shell with a stack overflow on every
+# single `cd` (confirmed against zoxide's current bash template, which
+# already uses `\builtin cd` - this is a long-fixed upstream bug, not
+# anything specific to this config). Patch it in transit rather than trust
+# whatever zoxide version happens to be installed; a fixed/modern zoxide's
+# output won't match this substitution, so it's a harmless no-op once
+# upgraded.
+eval "$(zoxide init bash --cmd cd | sed 's/^    cd "\$@" ||/    builtin cd "\$@" ||/')"
 
 PROMPT_COMMAND='PS1_CMD1=$(__git_ps1 " (%s)")'; PS1='\[\e[38;5;45m\]\u\[\e[38;5;145m\]@\[\e[38;5;69m\]\H\[\e[38;5;145m\]:\[\e[38;5;186m\]\w\[\e[0m\] \[\e[38;5;216m\][\[\e[38;5;216m\]\!\[\e[38;5;216m\]]\[\e[38;5;84m\]${PS1_CMD1}\n\[\e[38;5;202m\]\$\[\e[97m\] \[\e[0m\]'
 
