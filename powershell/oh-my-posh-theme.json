@@ -40,18 +40,13 @@
           "options": {
             "style": "full"
           },
-          "template": "{{ .Path }}"
+          "template": "{{ .Path }} "
         },
         {
           "type": "git",
           "style": "plain",
           "foreground": "#5fff87",
-          "template": " ({{ .HEAD }}{{ if .Working.Changed }} *{{ end }})"
-        },
-        {
-          "type": "text",
-          "style": "plain",
-          "template": " "
+          "template": "({{ .HEAD }}{{ if .Working.Changed }} *{{ end }}) "
         }
       ]
     },
@@ -62,18 +57,13 @@
       "filler": "─",
       "segments": [
         {
-          "type": "text",
-          "style": "plain",
-          "template": " "
-        },
-        {
           "type": "time",
           "style": "plain",
           "foreground": "#ffff00",
           "options": {
             "time_format": "2006-01-02T15:04:05"
           },
-          "template": "{{ .CurrentDate | date .Format }}"
+          "template": " {{ .CurrentDate | date .Format }}"
         }
       ]
     },
