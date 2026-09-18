@@ -47,6 +47,11 @@
           "style": "plain",
           "foreground": "#5fff87",
           "template": " ({{ .HEAD }}{{ if .Working.Changed }} *{{ end }})"
+        },
+        {
+          "type": "text",
+          "style": "plain",
+          "template": " "
         }
       ]
     },
@@ -56,6 +61,11 @@
       "newline": false,
       "filler": "─",
       "segments": [
+        {
+          "type": "text",
+          "style": "plain",
+          "template": " "
+        },
         {
           "type": "time",
           "style": "plain",
