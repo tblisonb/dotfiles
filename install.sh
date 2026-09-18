@@ -79,6 +79,33 @@ detect_distro() {
     fi
 }
 
+# eza isn't in the default apt repos on Ubuntu 22.04/jammy (or Debian 12/
+# bookworm) - prefer the distro's own copy once it ships one, and only fall
+# back to eza's own apt repo (https://github.com/eza-community/eza/blob/main/INSTALL.md)
+# when apt genuinely has no candidate for it.
+install_eza_debian() {
+    if command -v eza >/dev/null 2>&1; then
+        msg "eza already on PATH, skipping"
+        return
+    fi
+
+    if apt-cache show eza >/dev/null 2>&1; then
+        sudo apt-get install -y eza || warn "apt install of eza failed, check output above"
+        return
+    fi
+
+    msg "eza isn't in this release's default repos, adding eza's own apt repo"
+    sudo mkdir -p /etc/apt/keyrings
+    wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc \
+        | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg \
+        || { warn "failed to fetch/import eza's apt signing key, skipping eza"; return; }
+    echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" \
+        | sudo tee /etc/apt/sources.list.d/gierens.list >/dev/null
+    sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
+    sudo apt-get update
+    sudo apt-get install -y eza || warn "eza install via its own apt repo failed, check output above"
+}
+
 install_packages() {
     detect_distro
     local combo="$DISTRO_ID $DISTRO_LIKE"
@@ -87,15 +114,22 @@ install_packages() {
         *arch*)
             msg "installing packages via pacman"
             sudo pacman -Syu --needed --noconfirm \
-                eza bat fd ripgrep zoxide neofetch fzf unzip p7zip \
+                eza bat fd ripgrep zoxide fzf unzip p7zip \
                 || warn "pacman install had failures, check output above"
             ;;
         *debian*|*ubuntu*)
             msg "installing packages via apt"
             sudo apt-get update
+            # eza is handled separately below: apt-get install fails the
+            # *entire* command (installing nothing at all) if even one
+            # package name doesn't resolve, and eza isn't in the default
+            # repos before Ubuntu 23.10/Debian 13 (confirmed absent on
+            # 22.04/jammy) - it was silently taking bat/fd-find/ripgrep/
+            # zoxide/etc. down with it.
             sudo apt-get install -y \
-                eza bat fd-find ripgrep zoxide neofetch fzf nala unzip p7zip-full \
+                bat fd-find ripgrep zoxide neofetch fzf nala unzip p7zip-full \
                 || warn "apt install had failures, check output above"
+            install_eza_debian
             ;;
         *suse*)
             msg "installing packages via zypper"

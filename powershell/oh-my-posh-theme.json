@@ -2,29 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
   "version": 4,
   "final_space": true,
+  "shell_integration": true,
   "blocks": [
-    {
-      "type": "prompt",
-      "alignment": "left",
-      "newline": true,
-      "segments": []
-    },
-    {
-      "type": "prompt",
-      "alignment": "right",
-      "filler": "─",
-      "segments": [
-        {
-          "type": "time",
-          "style": "plain",
-          "foreground": "#ffff00",
-          "options": {
-            "time_format": "2006-01-02T15:04:05"
-          },
-          "template": "{{ .CurrentDate | date .Format }}"
-        }
-      ]
-    },
     {
       "type": "prompt",
       "alignment": "left",
@@ -68,6 +47,23 @@
           "style": "plain",
           "foreground": "#5fff87",
           "template": " ({{ .HEAD }}{{ if .Working.Changed }} *{{ end }})"
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "right",
+      "newline": false,
+      "filler": "─",
+      "segments": [
+        {
+          "type": "time",
+          "style": "plain",
+          "foreground": "#ffff00",
+          "options": {
+            "time_format": "2006-01-02T15:04:05"
+          },
+          "template": "{{ .CurrentDate | date .Format }}"
         }
       ]
     },

@@ -12,6 +12,20 @@
 # That installer wires up `enable flyline` in your real ~/.bashrc for you.
 # Sourced from .bashrc; everything here is gated on flyline actually being
 # enabled, so it's safe to source unconditionally.
+#
+# KNOWN ISSUE (2026-09-17): on an Ubuntu 22.04 WSL2 instance, the v1.8.0
+# installer above segfaulted mid checksum-verification twice in a row, both
+# times taking the interactive shell down with it (WSL itself recovered fine
+# - `wsl -l -v` just reports every distro idle/"Stopped" once nothing's
+# attached, it isn't VM corruption). Re-downloading and re-verifying the
+# exact same archive/checksum by hand, outside the installer, succeeded
+# cleanly both times, so the archive itself isn't corrupt; the installer's
+# later step - loading the downloaded .so directly into the *current* bash
+# process via `enable -f` to validate it before touching ~/.bashrc - is the
+# untested, more likely suspect (an ABI/build mismatch there would plausibly
+# crash the shell like this). Not pursued further since the ruler/RPS1 this
+# buys is cosmetic; if picking this back up, test that load in a disposable
+# shell first rather than a session you care about.
 
 if command -v flyline >/dev/null 2>&1; then
 

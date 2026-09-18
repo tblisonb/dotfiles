@@ -90,11 +90,25 @@ function Set-JunctionLink {
 Set-ProfileLink
 Set-JunctionLink (Join-Path $RepoDir "nvim") (Join-Path $env:LOCALAPPDATA "nvim")
 
-# --- 2. Install packages via winget -------------------------------------------
+# --- 2. Install packages via Chocolatey (falling back to winget) -------------
 
-# command-on-PATH -> winget package ID. The command name is checked first so
-# a package already installed by any means (Chocolatey, scoop, a manual
-# install) is left alone instead of getting a second winget-managed copy.
+# command-on-PATH -> package ID, one map per manager (IDs differ between the
+# two). Chocolatey is tried first since that's this repo's actual in-use
+# package manager (fzf/ripgrep/neovim here all came in via choco); winget is
+# only a fallback for a machine that has it but not choco. Either way the
+# command name is checked first so a package already installed by any means
+# (the other manager, scoop, a manual install) is left alone instead of
+# getting a second manager-owned copy.
+$ChocoPackages = @{
+    "eza"        = "eza"
+    "bat"        = "bat"
+    "fd"         = "fd"
+    "rg"         = "ripgrep"
+    "zoxide"     = "zoxide"
+    "fzf"        = "fzf"
+    "oh-my-posh" = "oh-my-posh"
+    "nvim"       = "neovim"
+}
 $WingetPackages = @{
     "eza"        = "eza-community.eza"
     "bat"        = "sharkdp.bat"
@@ -107,23 +121,33 @@ $WingetPackages = @{
 }
 
 function Install-Packages {
-    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-        Write-Warn "winget not found - install eza/bat/fd/ripgrep/zoxide/fzf/oh-my-posh/neovim manually"
+    $useChoco = [bool](Get-Command choco -ErrorAction SilentlyContinue)
+    $useWinget = [bool](Get-Command winget -ErrorAction SilentlyContinue)
+
+    if (-not $useChoco -and -not $useWinget) {
+        Write-Warn "neither choco nor winget found - install eza/bat/fd/ripgrep/zoxide/fzf/oh-my-posh/neovim manually"
         return
     }
 
-    foreach ($cmd in $WingetPackages.Keys) {
+    $packages = if ($useChoco) { $ChocoPackages } else { $WingetPackages }
+    $managerName = if ($useChoco) { "choco" } else { "winget" }
+
+    foreach ($cmd in $packages.Keys) {
         if (Get-Command $cmd -ErrorAction SilentlyContinue) {
             Write-Msg "$cmd already on PATH, skipping"
             continue
         }
 
-        $id = $WingetPackages[$cmd]
-        Write-Msg "installing $id via winget"
-        winget install --id $id --exact --source winget `
-            --accept-package-agreements --accept-source-agreements
+        $id = $packages[$cmd]
+        Write-Msg "installing $id via $managerName"
+        if ($useChoco) {
+            choco install $id -y
+        } else {
+            winget install --id $id --exact --source winget `
+                --accept-package-agreements --accept-source-agreements
+        }
         if ($LASTEXITCODE -ne 0) {
-            Write-Warn "winget install of $id failed (exit $LASTEXITCODE), check output above"
+            Write-Warn "$managerName install of $id failed (exit $LASTEXITCODE), check output above"
         }
     }
 }
