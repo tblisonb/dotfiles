@@ -64,6 +64,12 @@ setup_symlinks() {
     # ripgrep / wezterm: individual dotfiles at $HOME root
     link_path "$REPO_DIR/ripgrep/.ripgreprc"   "$HOME/.ripgreprc"
     link_path "$REPO_DIR/wezterm/.wezterm.lua" "$HOME/.wezterm.lua"
+
+    # btop: only the config file, not the whole directory - btop also
+    # writes btop.log next to it, which shouldn't end up in the repo.
+    # btop rewrites this file on exit when settings change in its menu,
+    # so changes made in the UI land straight in the repo (commit them).
+    link_path "$REPO_DIR/btop/btop.conf" "$HOME/.config/btop/btop.conf"
 }
 
 # --- 2. Install packages the bash config depends on -------------------------
@@ -155,6 +161,12 @@ install_packages() {
 # should be reviewed and run by hand once per machine:
 #   source <(curl -sSfL https://github.com/HalFrgrd/flyline/releases/latest/download/install.sh)
 # bash/.flyline.sh (symlinked above) picks it up automatically once enabled.
+
+# btop.conf (symlinked above) expects btop >= 1.4.0 (rsmi_measure_pcie_speeds).
+# Where the distro's btop is older (Debian 13 ships 1.3.2), build it into
+# ~/.local by hand - it compiles for a while, so it isn't run from here:
+#   ./btop/build-btop.sh
+# For AMD GPU stats also: sudo apt install librocm-smi64-1
 
 # Some distros ship bat/fd under different binary names (batcat/fdfind) to
 # avoid clashing with unrelated packages. The bash config assumes `bat` and
