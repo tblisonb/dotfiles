@@ -13,10 +13,11 @@ alias sudo='sudo -v; sudo '
 alias more='less'
 alias ls='eza --color=auto'
 alias grep='rg'
-alias cat='bat'
+# alias cat='bat'
 alias find='fd'
 alias vi='nvim'
 alias vim='nvim'
+alias apt='nala'
 
 # Navigation
 alias ..='cd ..'

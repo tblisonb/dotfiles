@@ -61,6 +61,9 @@ export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 export PATH="$HOME/.local/bin:$PATH"
 
+# Android SDK tools (adb, fastboot)
+[ -d "$HOME/Android/Sdk/platform-tools" ] && export PATH="$HOME/Android/Sdk/platform-tools:$PATH"
+
 # Deduplicate PATH (in case this file gets sourced more than once)
 dedup_path() {
     if [ -n "$PATH" ]; then
